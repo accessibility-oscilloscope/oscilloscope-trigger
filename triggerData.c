@@ -14,10 +14,8 @@ int main( int argc, char *argv[] )
   char currentPath[MAX_BUF];
   getcwd(currentPath, MAX_BUF);
   char output[1035];
-  printf(currentPath);
 
   /* Open the command for reading. */
-  printf("%s/%s", currentPath, "get-btn.sh");
   sprintf(currentPath, "%s/%s", currentPath, "get-btn.sh");
   fp = popen(currentPath, "r");
   if (fp == NULL) {
@@ -25,10 +23,10 @@ int main( int argc, char *argv[] )
     exit(1);
   }
 
-  printf("reading");
   /* Read the output a line at a time - output it. */
   while (fgets(output, sizeof(output), fp) != NULL) {
     printf("%s", output);
+    // TODO: Trigger USB Communcation and send to pipe
   }
 
   /* close */
