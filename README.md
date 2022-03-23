@@ -29,9 +29,13 @@ export OSCOPE_FIFO=/run/oscope-in
 mkfifo $SIGPROC_FIFO
 mkfifo $OSCOPE_FIFO
 
+### Terminal 1
+get-btn-test.sh
+### Terminal 2
+python3 -u trigger_data.py -i $OSCOPE_FIFO -o $SIGPROC_FIFO --serial /dev/ttyUSB0 -v
+### Terminal 3
+cat $SIGPROC_FIFO | hexdump -C
 
-get-btn-test.sh &
-python3 -u trigger_data.py -i $OSCOPE_FIFO -o $SIGPROC_FIFO --serial /dev/ttyUSB0 &
 ```
 
 ## Detailed Description
