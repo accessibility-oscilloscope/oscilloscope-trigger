@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-
+import syslog
 from serial import Serial
 from struct import unpack
 import time
 import argparse
 import os
-import signal
 
 # Seems that all four channels must be queried, so need to multiply by 4
 NUM_SAMPLES = 480
@@ -59,16 +58,16 @@ if __name__ == "__main__":
     output_fifo = os.open(output_path, os.O_WRONLY)
 
     if verbose:
-        print("reading")
+        syslog.syslog("reading")
     result = os.read(input_fifo, 1)
     if len(result) != 1:
         exit(1)
 
     if verbose:
-        print(unpack('%dB' % len(result), result))
+        syslog.syslog(str(unpack('%dB' % len(result), result)))
     if result == b'1':
         if verbose:
-            print("writing to oscope")
+            syslog.syslog("writing to oscope")
 
         ser = Serial(oscope_path, 1500000, timeout=1.0)
         for command in INIT_SEQ:
@@ -78,7 +77,7 @@ if __name__ == "__main__":
         ser.write(bytearray([100, 10]))  # arm trigger and get an event
 
         if verbose:
-            print("reading from oscope")
+            syslog.syslog("reading from oscope")
         read_result = ser.read(NUM_SAMPLES * 4)  # read values
         ser.close()
 
@@ -89,14 +88,13 @@ if __name__ == "__main__":
             channel.append(read_result[NUM_SAMPLES * i:NUM_SAMPLES * i + NUM_SAMPLES])
         if verbose:
             unpacked_data = unpack('%dB' % len(read_result), read_result)
-            print(unpacked_data[0: int(len(unpacked_data)/10)])
+            syslog.syslog(str(unpacked_data[0: int(len(unpacked_data)/10)]))
 
         amount_written = os.write(output_fifo, channel[0])
         if len(channel[0]) != amount_written:
             exit(1)
         if verbose:
-            print("wrote "+str(len(channel[0]))+" bytes")
-
+            syslog.syslog("wrote "+str(len(channel[0]))+" bytes")
     os.close(input_fifo)
     os.close(output_fifo)
 
