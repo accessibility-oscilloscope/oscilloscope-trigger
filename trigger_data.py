@@ -58,42 +58,46 @@ if __name__ == "__main__":
     input_fifo = os.open(input_path, os.O_RDONLY)
     output_fifo = os.open(output_path, os.O_WRONLY)
 
-    ser = Serial(oscope_path, 1500000, timeout=1.0)
-
-    def handler(signum, frame):
-        os.close(input_fifo)
-        os.close(output_fifo)
-        ser.close()
+    if verbose:
+        print("reading")
+    result = os.read(input_fifo, 1)
+    if len(result) != 1:
         exit(1)
 
-    signal.signal(signal.SIGINT, handler)
-
-    while True:
+    if verbose:
+        print(unpack('%dB' % len(result), result))
+    if result == b'1':
         if verbose:
-            print("reading")
-        result = os.read(input_fifo, 1)
+            print("writing to oscope")
+
+        ser = Serial(oscope_path, 1500000, timeout=1.0)
+        for command in INIT_SEQ:
+            ser.write(bytearray(command))
+            time.sleep(.1)  # pessimistic init sequence delay
+
+        ser.write(bytearray([100, 10]))  # arm trigger and get an event
+
         if verbose:
-            print(unpack('%dB' % len(result), result))
-        if result == b'1':
-            if verbose:
-                print("writing to oscope")
-            for command in INIT_SEQ:
-                ser.write(bytearray(command))
-                time.sleep(.1)  # pessimistic init sequence delay
+            print("reading from oscope")
+        read_result = ser.read(NUM_SAMPLES * 4)  # read values
+        ser.close()
 
-            ser.write(bytearray([100, 10]))  # arm trigger and get an event
+        if len(read_result) != NUM_SAMPLES * 4:
+            exit(1)
+        channel = []
+        for i in range(0, 4):
+            channel.append(read_result[NUM_SAMPLES * i:NUM_SAMPLES * i + NUM_SAMPLES])
+        if verbose:
+            unpacked_data = unpack('%dB' % len(read_result), read_result)
+            print(unpacked_data[0: int(len(unpacked_data)/10)])
 
-            if verbose:
-                print("reading from oscope")
-            read_result = ser.read(NUM_SAMPLES * 4)  # read values
+        amount_written = os.write(output_fifo, channel[0])
+        if len(channel[0]) != amount_written:
+            exit(1)
+        if verbose:
+            print("wrote "+str(len(channel[0]))+" bytes")
 
-            channel = []
-            for i in range(0, 4):
-                channel.append(read_result[NUM_SAMPLES * i:NUM_SAMPLES * i + NUM_SAMPLES])
-            if verbose:
-                unpacked_data = unpack('%dB' % len(read_result), read_result)
-                print(unpacked_data[0: int(len(unpacked_data)/10)])
+    os.close(input_fifo)
+    os.close(output_fifo)
 
-            os.write(output_fifo, channel[0])
-            if verbose:
-                print("wrote "+str(len(channel[0]))+" bytes")
+    exit(0)
