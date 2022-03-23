@@ -8,7 +8,7 @@ import os
 import signal
 
 # Seems that all four channels must be queried, so need to multiply by 4
-NUM_SAMPLES = 480 * 4
+NUM_SAMPLES = 480
 NS_BYTE_1 = NUM_SAMPLES >> 8
 NS_BYTE_2 = NUM_SAMPLES % 255
 
@@ -87,9 +87,13 @@ if __name__ == "__main__":
                 print("reading from oscope")
             read_result = ser.read(NUM_SAMPLES * 4)  # read values
 
-            channel = [[], [], [], []]
+            channel = []
             for i in range(0, 4):
-                channel[i] = read_result[NUM_SAMPLES * i:NUM_SAMPLES * i + NUM_SAMPLES]
+                channel.append(read_result[NUM_SAMPLES * i:NUM_SAMPLES * i + NUM_SAMPLES])
             if verbose:
-                print(unpack('%dB' % len(read_result), read_result))
+                unpacked_data = unpack('%dB' % len(read_result), read_result)
+                print(unpacked_data[0: int(len(unpacked_data)/10)])
+
             os.write(output_fifo, channel[0])
+            if verbose:
+                print("wrote "+str(len(channel[0]))+" bytes")
