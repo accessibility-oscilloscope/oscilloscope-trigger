@@ -61,6 +61,7 @@ if __name__ == "__main__":
         syslog.syslog("reading")
     result = os.read(input_fifo, 1)
     if len(result) != 1:
+        syslog.syslog("read " + str(len(result)) + " bytes")
         exit(1)
 
     if verbose:
@@ -91,10 +92,11 @@ if __name__ == "__main__":
             syslog.syslog(str(unpacked_data[0: int(len(unpacked_data)/10)]))
 
         amount_written = os.write(output_fifo, channel[0])
+        if verbose:
+            syslog.syslog("wrote "+str(amount_written)+" bytes")
         if len(channel[0]) != amount_written:
             exit(1)
-        if verbose:
-            syslog.syslog("wrote "+str(len(channel[0]))+" bytes")
+
     os.close(input_fifo)
     os.close(output_fifo)
 
