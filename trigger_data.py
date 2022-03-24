@@ -95,6 +95,7 @@ if __name__ == "__main__":
         if verbose:
             syslog.syslog("wrote "+str(amount_written)+" bytes")
         if len(channel[0]) != amount_written:
+            syslog.syslog("failed to write correct amount")
             exit(1)
 
     os.close(input_fifo)
