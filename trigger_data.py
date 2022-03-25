@@ -55,7 +55,7 @@ if __name__ == "__main__":
     verbose = args.verbose
 
     input_fifo = os.open(input_path, os.O_RDONLY)
-    output_fifo = os.open(output_path, os.O_WRONLY)
+
 
     if verbose:
         syslog.syslog("reading")
@@ -67,6 +67,7 @@ if __name__ == "__main__":
     if verbose:
         syslog.syslog(str(unpack('%dB' % len(result), result)))
     if result == b'1':
+        output_fifo = os.open(output_path, os.O_WRONLY)
         if verbose:
             syslog.syslog("writing to oscope")
 
@@ -97,8 +98,7 @@ if __name__ == "__main__":
         if len(channel[0]) != amount_written:
             syslog.syslog("failed to write correct amount")
             exit(1)
+        os.close(output_fifo)
 
     os.close(input_fifo)
-    os.close(output_fifo)
-
     exit(0)
