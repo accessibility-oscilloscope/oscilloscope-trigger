@@ -63,11 +63,11 @@ if __name__ == "__main__":
     if len(result) != 1:
         syslog.syslog("read " + str(len(result)) + " bytes")
         exit(1)
+    os.close(input_fifo)
 
     if verbose:
         syslog.syslog(str(unpack('%dB' % len(result), result)))
     if result == b'1':
-        output_fifo = os.open(output_path, os.O_WRONLY)
         if verbose:
             syslog.syslog("writing to oscope")
 
@@ -92,6 +92,7 @@ if __name__ == "__main__":
             unpacked_data = unpack('%dB' % len(read_result), read_result)
             syslog.syslog(str(unpacked_data[0: int(len(unpacked_data)/10)]))
 
+        output_fifo = os.open(output_path, os.O_WRONLY)
         amount_written = os.write(output_fifo, channel[0])
         if verbose:
             syslog.syslog("wrote "+str(amount_written)+" bytes")
@@ -99,6 +100,4 @@ if __name__ == "__main__":
             syslog.syslog("failed to write correct amount")
             exit(1)
         os.close(output_fifo)
-
-    os.close(input_fifo)
     exit(0)
