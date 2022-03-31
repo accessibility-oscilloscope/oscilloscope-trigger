@@ -6,10 +6,11 @@ import time
 import argparse
 import os
 
-# Seems that all four channels must be queried, so need to multiply by 4
-NUM_SAMPLES = 480
-NS_BYTE_1 = NUM_SAMPLES >> 8
-NS_BYTE_2 = NUM_SAMPLES % 255
+# Don't make this larger than 4095
+NUM_SAMPLES = 4095
+NS_BYTE_1 = (NUM_SAMPLES // 256) % 256
+NS_BYTE_2 = NUM_SAMPLES % 256
+DOWNSAMPLE = 3
 
 # Reference https://github.com/drandyhaas/Haasoscope/blob/master/software/serial_read.py
 INIT_SEQ = [
@@ -17,7 +18,7 @@ INIT_SEQ = [
     [135, 0, 100],  # serialdelaytimerwait of 100
     [122, NS_BYTE_1, NS_BYTE_2],  # number of samples = NS_BYTE_1 * 255 + NS_BYTE_2
     [123, 0],  # send increment
-    [124, 3],  # downsample 3
+    [124, DOWNSAMPLE],  # downsample
     [125, 1],  # tickstowait 1
     [136, 2, 32, 0, 0, 255, 200],  # io expanders on (!)
     [136, 2, 32, 1, 0, 255, 200],  # io expanders on (!)
